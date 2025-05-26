@@ -20,7 +20,9 @@ func init() {
 }
 
 func exit(input []string) {
-	if strings.Join(input, "") == "0" {
+	code := strings.Join(input, "")
+
+	if code == "0" || code == "" {
 		os.Exit(0)
 	} else {
 		os.Exit(1)
@@ -60,7 +62,6 @@ func _type(input []string) {
 }
 
 func _exec(input []string) {
-
 	full_path, _ := exec.LookPath(input[0])
 
 	if full_path != "" {
@@ -77,7 +78,6 @@ func _exec(input []string) {
 
 func pwd(input []string) {
 	path, _ := os.Getwd()
-
 	fmt.Println(path)
 }
 
@@ -95,22 +95,19 @@ func cd(input []string) {
 			if seg == "" {
 				continue
 			}
-			// ../
-			// ../..
-			// ../as/../asd
-			// ../as/sa
 			cur_dir, err := os.Getwd()
 			if err != nil {
 				os.Exit(1)
 			}
-			path = filepath.Dir(cur_dir)
+			if seg == ".." {
+				path = filepath.Dir(cur_dir)
+			} else {
+				path = cur_dir + "/" + seg
+			}
 			os.Chdir(path)
 		}
 		return
 	} else if string(path[0]) == "." {
-		//relative path
-		// ./pat/to/dir
-		// /bin/pat/to/dir
 		cur_dir, err := os.Getwd()
 		if err != nil {
 			os.Exit(1)
