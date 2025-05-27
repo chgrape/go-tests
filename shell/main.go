@@ -19,6 +19,47 @@ func init() {
 	cmds["cd"] = cd
 }
 
+func handle_single_quotes(input []string) []string {
+	s := strings.Join(input, " ")
+	var res []string
+	start := false
+	str_quotes := ""
+	var opchar byte
+	for i := range len(s) {
+
+		// 'hello' 'hey hai' ads
+		if s[i] == '\'' || s[i] == '"' {
+			if opchar == 0 {
+				opchar = s[i]
+			}
+			if opchar == s[i] {
+				start = !start
+				if !start {
+					opchar = 0
+				}
+				continue
+
+			}
+		}
+		if start && s[i] == ' ' {
+			str_quotes += string(s[i])
+		} else if !start && s[i] == ' ' {
+			if str_quotes != "" {
+				res = append(res, str_quotes)
+				str_quotes = ""
+			}
+		} else {
+			str_quotes += string(s[i])
+		}
+	}
+
+	if str_quotes != "" {
+		res = append(res, str_quotes)
+	}
+
+	return res
+}
+
 func exit(input []string) {
 	code := strings.Join(input, "")
 
@@ -34,6 +75,7 @@ func echo(input []string) {
 		fmt.Println("echo works")
 		return
 	}
+
 	fmt.Println(strings.Join(input, " "))
 }
 
@@ -47,7 +89,7 @@ func _type(input []string) {
 
 	_, ok := cmds[cmd]
 
-	if ok {
+	if ok && cmd != "cat" {
 		fmt.Println(cmd + " is a shell builtin")
 		return
 	}
@@ -88,6 +130,12 @@ func cd(input []string) {
 
 	path := strings.Join(input, "")
 	cur := path
+	if string(path[0]) == "~" {
+		dest_dir := os.Getenv("HOME")
+
+		os.Chdir(dest_dir)
+		return
+	}
 
 	if string(path[:2]) == ".." {
 		path_arr := strings.Split(path, "/")
@@ -107,7 +155,9 @@ func cd(input []string) {
 			os.Chdir(path)
 		}
 		return
-	} else if string(path[0]) == "." {
+	}
+
+	if string(path[0]) == "." {
 		cur_dir, err := os.Getwd()
 		if err != nil {
 			os.Exit(1)
@@ -136,8 +186,7 @@ func main() {
 		}
 		line := strings.TrimSpace(command)
 		args := strings.Split(line, " ")
-		cmd, flags := args[0], args[1:]
-
+		cmd, flags := args[0], handle_single_quotes(args[1:])
 		run, ok := cmds[cmd]
 
 		if ok {
