@@ -186,7 +186,8 @@ func main() {
 		}
 		line := strings.TrimSpace(command)
 		args := strings.Split(line, " ")
-		cmd, flags := args[0], handle_single_quotes(args[1:])
+		args = handle_single_quotes(args)
+		cmd, flags := args[0], args[1:]
 		run, ok := cmds[cmd]
 
 		if ok {
