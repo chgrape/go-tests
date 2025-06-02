@@ -1,30 +1,50 @@
 package main
 
 import (
+	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/gorilla/websocket"
 )
 
-type Server struct{
+type Server struct {
 	cons map[*websocket.Conn]bool
 }
 
-func create_server()*Server{
+func create_server() *Server {
 	return &Server{
 		cons: make(map[*websocket.Conn]bool),
 	}
 }
 
-func (s *Server) accept_connection(ws *websocket.Conn){
-	s.cons[ws] = true
+func test(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Heiiii")
+	io.WriteString(w, "Hello world")
 }
 
-func main(){
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+}
+
+func main() {
 	s := create_server()
 
-	http.Handle("/connect", websocket.)
+	http.HandleFunc("/", test)
+	http.HandleFunc("/connect", func(w http.ResponseWriter, r *http.Request) {
+		conn, err := upgrader.Upgrade(w, r, nil)
 
+		if err != nil {
+			panic(err)
+		}
 
-	s.accept_connection()
+		defer conn.Close()
+
+		(*s).cons[conn] = true
+		fmt.Println("Connected")
+		fmt.Println(s)
+	})
+	http.ListenAndServe(":3000", nil)
+
 }
